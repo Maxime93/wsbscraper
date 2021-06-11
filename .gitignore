@@ -141,4 +141,4 @@ cython_debug/
 .vscode
 
 # Conf
-config/**
+config/*.yml
