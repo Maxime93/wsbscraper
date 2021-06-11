@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ ! $(pwd) == */wsbscraper ]]; then 
+if [[ ! $(pwd) == */wsbscraper ]]; then
     echo "Run this script from the base hunterx directory with ./script/run.sh"
     exit
 fi
