@@ -110,7 +110,8 @@ def process_post(post):
             {"id": comment.id,
              "score": comment.score,
              "created": comment.created,
-             "body": comment.body,
+             # Saving every comment is too much for the DB for now
+             "body": "",  # comment.body
              "author": comment.author.__str__(),
              "upvote": comment.ups,
              "downvote": comment.downs,

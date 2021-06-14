@@ -114,7 +114,7 @@ if __name__ == "__main__":
                         type=str, default='wallstreetbets')
     parser.add_argument("-n", "--number-posts",
                         help="Number of posts to scrape",
-                        type=int, default=4)
+                        type=int, default=30)
     parser.add_argument("-t", "--timespan",
                         help="Over how much time",
                         type=str, default='day')
