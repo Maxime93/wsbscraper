@@ -133,5 +133,4 @@ if __name__ == "__main__":
     comment_blobs = get_tickers('comments', args.day)
 
     post_count, comment_count, all_count = count_tickers(post_blobs, comment_blobs)
-    print(post_count)
     save(post_count, comment_count, all_count, args.day)

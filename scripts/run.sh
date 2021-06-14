@@ -11,7 +11,6 @@ if [ -n "$DEPLOY" ]; then
     echo "Running on $DEPLOY"
     if [ $DEPLOY == "raspberry" ]; then
         # running on raspberry
-        conda activate wsbscraper
         python runner.py
     # else
         # Build the docker container before running

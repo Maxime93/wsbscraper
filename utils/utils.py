@@ -43,7 +43,7 @@ blacklist_words = [
       "OP", "DJIA", "PS", "AH", "TL", "DR", "JAN", "FEB", "JUL", "AUG",
       "SEP", "SEPT", "OCT", "NOV", "DEC", "FDA", "IV", "ER", "IPO", "RISE"
       "IPA", "URL", "MILF", "BUT", "SSN", "FIFA", "USD", "CPU", "AT",
-      "GG", "ELON"
+      "GG", "ELON", "BEAR", "BULL", "BNGO", "APE"
    ]
 
 
