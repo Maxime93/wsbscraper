@@ -11,7 +11,9 @@ if __name__ == "__main__":
                         help='Set the level for logging',
                         choices=('DEBUG', 'INFO', 'WARNING', 'ERROR'),
                         default='DEBUG')
-
+    parser.add_argument("-p", "--path",
+                        help="Path to your DB file",
+                        default="", type=str)
     args = parser.parse_args()
 
     # Set up logger
@@ -31,17 +33,17 @@ if __name__ == "__main__":
 
     day = datetime.datetime.now().strftime("%Y-%m-%d")
     logger.info("Save posts..")
-    subprocess.call(["python", "save_posts.py", "-n", "5"])
+    subprocess.call(["python", "save_posts.py", "-n", "5", "-p", args.path])
     logger.info("Done.")
     time.sleep(2)
     logger.info("Save comments..")
-    subprocess.call(["python", "save_comments.py", "-d", day])
+    subprocess.call(["python", "save_comments.py", "-d", day, "-p", args.path])
     logger.info("Done.")
     time.sleep(2)
     logger.info("Update tickers..")
-    subprocess.call(["python", "update_tickers.py", "-d", day])
+    subprocess.call(["python", "update_tickers.py", "-d", day, "-p", args.path])
     logger.info("Done.")
     time.sleep(2)
     logger.info("Count tickers..")
-    subprocess.call(["python", "count_tickers.py", "-d", day])
+    subprocess.call(["python", "count_tickers.py", "-d", day, "-p", args.path])
     logger.info("Done.")
