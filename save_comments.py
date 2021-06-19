@@ -1,6 +1,3 @@
-import json
-import sys
-
 import pandas as pd
 
 from utils.utils import (
@@ -30,18 +27,18 @@ columns = [
 ]
 
 
-def get_posts(day):
+def get_posts(day, path):
     query = ("SELECT strftime('%Y-%m-%d', `timestamp`) as day, id "
              "FROM posts "
              "WHERE day = '{day}';".format(blank="{}", day=day))
-    engine = get_sqlite_engine()
+    engine = get_sqlite_engine(path=path)
     with engine.begin() as con:
         posts = con.execute(query).fetchall()
     return posts
 
 
-def save_comments(comments_df):
-    engine = get_sqlite_engine()
+def save_comments(comments_df, path):
+    engine = get_sqlite_engine(path=path)
     with engine.begin() as con:
         # DELETE temp table
         query = 'DROP TABLE IF EXISTS `{temp}`;'.format(
@@ -97,7 +94,7 @@ def save_comments(comments_df):
         con.execute(query)
 
 
-def process_post(post):
+def process_post(post, path):
     """post is a tuple. Eg: ('2021-06-09', 'nw7ug5')
     """
     comments_records = []
@@ -124,7 +121,7 @@ def process_post(post):
     _timestamp = comments_df["created"].apply(get_date)
     comments_df = comments_df.assign(timestamp=_timestamp)
     comments_df['tickers'] = comments_df.apply(lambda x: extract_tickers_from_text([x.body]), axis=1)
-    save_comments(comments_df)
+    save_comments(comments_df, path)
 
 
 if __name__ == "__main__":
@@ -133,6 +130,9 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--day",
                         help="yyyy-mm-dd",
                         type=str, required=True)
+    parser.add_argument("-p", "--path",
+                        help="Path to your DB file",
+                        default="", type=str)
     parser.add_argument(
         "-l",
         "--log-level",
@@ -146,9 +146,8 @@ if __name__ == "__main__":
     reddit = get_reddit_client(config)
 
     # Get reddit posts for a day
-    posts = get_posts(args.day)
+    posts = get_posts(args.day, args.path)
 
     # Process posts
     for post in posts:
-        print(post)
-        process_post(post)
+        process_post(post, args.path)

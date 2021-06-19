@@ -1,4 +1,5 @@
 import json
+from os import path
 
 import pandas as pd
 
@@ -9,8 +10,9 @@ from utils.utils import (
 sqlite_table = "tickers_timeseries"
 sqlite_temp_table = "temp_tickers_timeseries"
 
-def get_tickers(source, day):
-    engine = get_sqlite_engine()
+
+def get_tickers(source, day, path):
+    engine = get_sqlite_engine(path=path)
     query = ("SELECT strftime('%Y-%m-%d', `timestamp`) as day, tickers "
              "FROM {source} "
              "WHERE tickers != '{blank}' and day = '{day}';".format(
@@ -48,7 +50,7 @@ def count_tickers(post_blobs, comment_blobs):
     return post_count, comment_count, all_count
 
 
-def save(post_count, comment_count, all_count, day):
+def save(post_count, comment_count, all_count, day, path):
     data = [
         {"id": "{}_post".format(day),
          "day": day,
@@ -65,7 +67,7 @@ def save(post_count, comment_count, all_count, day):
     ]
     df = pd.DataFrame.from_records(data)
 
-    engine = get_sqlite_engine()
+    engine = get_sqlite_engine(path=path)
     with engine.begin() as con:
         # DELETE temp table
         query = 'DROP TABLE IF EXISTS `{temp}`;'.format(
@@ -121,6 +123,9 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--day",
                         help="yyyy-mm-dd",
                         type=str, required=True)
+    parser.add_argument("-p", "--path",
+                        help="Path to your DB file",
+                        default="", type=str)
     parser.add_argument(
         "-l",
         "--log-level",
@@ -129,8 +134,8 @@ if __name__ == "__main__":
         default="INFO",
     )
     args = parser.parse_args()
-    post_blobs = get_tickers('posts', args.day)
-    comment_blobs = get_tickers('comments', args.day)
+    post_blobs = get_tickers('posts', args.day, args.path)
+    comment_blobs = get_tickers('comments', args.day, args.path)
 
     post_count, comment_count, all_count = count_tickers(post_blobs, comment_blobs)
-    save(post_count, comment_count, all_count, args.day)
+    save(post_count, comment_count, all_count, args.day, args.path)

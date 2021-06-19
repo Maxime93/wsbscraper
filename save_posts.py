@@ -1,3 +1,4 @@
+from os import path
 import pandas as pd
 
 from utils.utils import (
@@ -51,8 +52,8 @@ def get_reddit_posts(subreddit_string, limit, timespan):
     return posts_df[columns]
 
 
-def save_new_posts():
-    engine = get_sqlite_engine()
+def save_new_posts(path):
+    engine = get_sqlite_engine(path=path)
     with engine.begin() as con:
         # DELETE temp table
         query = 'DROP TABLE IF EXISTS `{temp_posts}`;'.format(
@@ -114,10 +115,13 @@ if __name__ == "__main__":
                         type=str, default='wallstreetbets')
     parser.add_argument("-n", "--number-posts",
                         help="Number of posts to scrape",
-                        type=int, default=30)
+                        type=int, default=5)
     parser.add_argument("-t", "--timespan",
                         help="Over how much time",
                         type=str, default='day')
+    parser.add_argument("-p", "--path",
+                        help="Path to your DB file",
+                        default="", type=str)
     parser.add_argument(
         "-l",
         "--log-level",
@@ -135,4 +139,4 @@ if __name__ == "__main__":
         args.subreddit,
         args.number_posts,
         args.timespan)
-    save_new_posts()
+    save_new_posts(args.path)

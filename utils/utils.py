@@ -11,8 +11,9 @@ def get_date(created):
     return datetime.datetime.fromtimestamp(created)
 
 
-def get_sqlite_engine():
-    engine = create_engine('sqlite:///data/reddit.db', echo=True)
+def get_sqlite_engine(path="", echo=False):
+    sqlite_loc = 'sqlite:///{path}data/reddit.db'.format(path=path)
+    engine = create_engine(sqlite_loc, echo=echo)
     return engine
 
 
