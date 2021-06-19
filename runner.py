@@ -14,6 +14,9 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--path",
                         help="Path to your DB file",
                         default="", type=str)
+    parser.add_argument("-n", "--number-posts",
+                        help="Number of posts to scrape",
+                        type=int, default=5)
     args = parser.parse_args()
 
     # Set up logger
@@ -33,13 +36,14 @@ if __name__ == "__main__":
 
     day = datetime.datetime.now().strftime("%Y-%m-%d")
     logger.info("Save posts..")
-    subprocess.call(["python", "save_posts.py", "-n", "5", "-p", args.path])
+    subprocess.call(["python", "save_posts.py", "-n", str(args.number_posts), "-p", args.path])
     logger.info("Done.")
     time.sleep(2)
-    logger.info("Save comments..")
-    subprocess.call(["python", "save_comments.py", "-d", day, "-p", args.path])
-    logger.info("Done.")
-    time.sleep(2)
+    # Skipping svaing comments, content sucks
+    # logger.info("Save comments..")
+    # subprocess.call(["python", "save_comments.py", "-d", day, "-p", args.path])
+    # logger.info("Done.")
+    # time.sleep(2)
     logger.info("Update tickers..")
     subprocess.call(["python", "update_tickers.py", "-d", day, "-p", args.path])
     logger.info("Done.")
