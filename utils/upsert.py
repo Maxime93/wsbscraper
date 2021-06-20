@@ -2,7 +2,8 @@ from utils.utils import (
     get_sqlite_engine
 )
 
-def upsert(path, sqlite_temp_table, sqlite_table, df):
+
+def upsert(path, sqlite_temp_table, sqlite_table, df, columns):
     engine = get_sqlite_engine(path=path)
     with engine.begin() as con:
         # DELETE temp table
@@ -33,17 +34,27 @@ def upsert(path, sqlite_temp_table, sqlite_table, df):
         con.execute(query)
 
         # Do an UPDATE ... JOIN to set all non-key columns of target to equal source
+        set_expressions = []
+        for column in columns:
+            set_expression = "{column} = (SELECT {column} FROM {temp} WHERE id = {prod}.id)".format(
+                column=column,
+                temp=sqlite_temp_table,
+                prod=sqlite_table
+            )
+            set_expressions.append(set_expression)
+        set_expressions = ", ".join(set_expressions)
         query = """UPDATE
                         {prod}
-                    SET blob = (SELECT blob
-                                FROM {temp}
-                                WHERE id = {prod}.id)
-                    where EXISTS (SELECT blob
+                    SET {set_expressions}
+                    where EXISTS (SELECT {columns}
                                 FROM {temp}
                                 WHERE id = {prod}.id)
                     ;""".format(
-                        temp=sqlite_temp_table, prod=sqlite_table
+                        temp=sqlite_temp_table, prod=sqlite_table,
+                        set_expressions=set_expressions,
+                        columns=", ".join(columns)
                     )
+
         con.execute(query)
 
         # DELETE temp table

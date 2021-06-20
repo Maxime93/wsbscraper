@@ -64,8 +64,8 @@ def save(post_count, comment_count, all_count, day, path):
          "blob": json.dumps(all_count)}
     ]
     df = pd.DataFrame.from_records(data)
-
-    upsert(path, sqlite_temp_table, sqlite_table, df)
+    columns = ['blob']
+    upsert(path, sqlite_temp_table, sqlite_table, df, columns)
 
 
 if __name__ == "__main__":

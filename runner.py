@@ -2,6 +2,7 @@ import argparse
 import datetime
 import logging
 import subprocess
+import sys
 import time
 
 if __name__ == "__main__":
@@ -35,19 +36,52 @@ if __name__ == "__main__":
     logger.info('Logger set up')
 
     day = datetime.datetime.now().strftime("%Y-%m-%d")
+
+    # ##############################
     logger.info("Save posts..")
-    subprocess.call(["python", "save_posts.py", "-n", str(args.number_posts), "-p", args.path])
+    subprocess.call([
+        "python",
+        "{}save_posts.py".format(args.path),
+        "-n", str(args.number_posts),
+        "-p", args.path
+    ])
     logger.info("Done.")
+
+    # ##############################
     time.sleep(2)
-    # Skipping svaing comments, content sucks
+    # ##############################
+
+    # Skipping saving comments, content sucks
     # logger.info("Save comments..")
-    # subprocess.call(["python", "save_comments.py", "-d", day, "-p", args.path])
+    # subprocess.call([
+    #     "python",
+    #     "save_comments.py",
+    #     "-d", day, "-p", args.path
+    # ])
     # logger.info("Done.")
+
+    # ##############################
     # time.sleep(2)
+    # ##############################
+
     logger.info("Update tickers..")
-    subprocess.call(["python", "update_tickers.py", "-d", day, "-p", args.path])
+    subprocess.call([
+        "python",
+        "{}update_tickers.py".format(args.path),
+        "-d", day,
+        "-p", args.path
+    ])
     logger.info("Done.")
+
+    # ##############################
     time.sleep(2)
+    # ##############################
+
     logger.info("Count tickers..")
-    subprocess.call(["python", "count_tickers.py", "-d", day, "-p", args.path])
+    subprocess.call([
+        "python",
+        "{}count_tickers.py".format(args.path),
+        "-d", day,
+        "-p", args.path
+    ])
     logger.info("Done.")

@@ -17,8 +17,9 @@ def get_sqlite_engine(path="", echo=False):
     return engine
 
 
-def read_configs():
-    with open('configs/config.yml') as f:
+def read_configs(path=""):
+    p = '{}configs/config.yml'.format(path)
+    with open(p) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         return config
 
@@ -44,7 +45,7 @@ blacklist_words = [
       "OP", "DJIA", "PS", "AH", "TL", "DR", "JAN", "FEB", "JUL", "AUG",
       "SEP", "SEPT", "OCT", "NOV", "DEC", "FDA", "IV", "ER", "IPO", "RISE"
       "IPA", "URL", "MILF", "BUT", "SSN", "FIFA", "USD", "CPU", "AT",
-      "GG", "ELON", "BEAR", "BULL", "BNGO", "APE"
+      "GG", "ELON", "BEAR", "BULL", "BNGO", "APE", "PORN"
    ]
 
 

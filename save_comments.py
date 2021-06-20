@@ -7,6 +7,7 @@ from utils.utils import (
     get_reddit_client,
     get_date
 )
+from utils.upsert import upsert
 
 sqlite_table = "comments"
 sqlite_temp_table = "temp_comments"
@@ -37,61 +38,9 @@ def get_posts(day, path):
     return posts
 
 
-def save_comments(comments_df, path):
-    engine = get_sqlite_engine(path=path)
-    with engine.begin() as con:
-        # DELETE temp table
-        query = 'DROP TABLE IF EXISTS `{temp}`;'.format(
-            temp=sqlite_temp_table
-        )
-        con.execute(query)
-
-        # Create temp table like target table to stage data for upsert
-        query = "CREATE TABLE `{temp}` AS SELECT * FROM `{prod}` WHERE false;".format(
-            temp=sqlite_temp_table, prod=sqlite_table
-        )
-        con.execute(query)
-
-        # Insert dataframe into temp table
-        comments_df[columns].to_sql(
-            sqlite_temp_table,
-            con,
-            if_exists='append',
-            index=False,
-            method='multi'
-        )
-
-        # INSERT where the key doesn't match (new rows)
-        query = "INSERT INTO `{prod}` SELECT * FROM `{temp}` WHERE `id` NOT IN (SELECT `id` FROM `{prod}`);".format(
-            temp=sqlite_temp_table, prod=sqlite_table
-        )
-        con.execute(query)
-
-        # Do an UPDATE ... JOIN to set all non-key columns of target to equal source
-        query = """UPDATE
-                        {prod}
-                    SET score = (SELECT score
-                                FROM {temp}
-                                WHERE id = {prod}.id),
-                        upvote = (SELECT upvote
-                                FROM {temp}
-                                WHERE id = {prod}.id),
-                        downvote = (SELECT downvote
-                                FROM {temp}
-                                WHERE id = {prod}.id)
-                    where EXISTS (SELECT score, upvote, downvote
-                                FROM {temp}
-                                WHERE id = {prod}.id)
-                    ;""".format(
-                        temp=sqlite_temp_table, prod=sqlite_table
-                    )
-        con.execute(query)
-
-        # DELETE temp table
-        query = 'DROP TABLE `{temp}`;'.format(
-            temp=sqlite_temp_table
-        )
-        con.execute(query)
+def save_comments(df, path):
+    columns = ['score', 'upvote', 'downvote']
+    upsert(path, sqlite_temp_table, sqlite_table, df, columns)
 
 
 def process_post(post, path):
@@ -142,7 +91,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # Get config and reddit client
-    config = read_configs()
+    config = read_configs(path=args.path)
     reddit = get_reddit_client(config)
 
     # Get reddit posts for a day

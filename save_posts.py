@@ -8,6 +8,7 @@ from utils.utils import (
     get_reddit_client,
     get_date
 )
+from utils.upsert import upsert
 
 sqlite_table = "posts"
 sqlite_temp_table = "temp_posts"
@@ -52,59 +53,9 @@ def get_reddit_posts(subreddit_string, limit, timespan):
     return posts_df[columns]
 
 
-def save_new_posts(path):
-    engine = get_sqlite_engine(path=path)
-    with engine.begin() as con:
-        # DELETE temp table
-        query = 'DROP TABLE IF EXISTS `{temp_posts}`;'.format(
-            temp_posts=sqlite_temp_table
-        )
-        con.execute(query)
-
-        # Create temp table like target table to stage data for upsert
-        query = "CREATE TABLE `{temp_posts}` AS SELECT * FROM `{posts}` WHERE false;".format(
-            temp_posts=sqlite_temp_table, posts=sqlite_table
-        )
-        con.execute(query)
-
-        # Insert dataframe into temp table
-        posts_df.to_sql(
-            sqlite_temp_table,
-            con,
-            if_exists='append',
-            index=False,
-            method='multi'
-        )
-
-        # INSERT where the key doesn't match (new rows)
-        query = "INSERT INTO `{posts}` SELECT * FROM `{temp_posts}` WHERE `id` NOT IN (SELECT `id` FROM `{posts}`);".format(
-            temp_posts=sqlite_temp_table, posts=sqlite_table
-        )
-        con.execute(query)
-
-        # Do an UPDATE ... JOIN to set all non-key columns of target to equal source
-        query = """UPDATE
-                        posts
-                    SET score = (SELECT score
-                                FROM temp_posts
-                                WHERE id = posts.id),
-                        comms_num = (SELECT comms_num
-                                FROM temp_posts
-                                WHERE id = posts.id),
-                        upvote_ratio = (SELECT upvote_ratio
-                                FROM temp_posts
-                                WHERE id = posts.id)
-                    where EXISTS (SELECT score, comms_num, upvote_ratio
-                                FROM temp_posts
-                                WHERE id = posts.id)
-                    ;"""
-        con.execute(query)
-
-        # DELETE temp table
-        query = 'DROP TABLE `{temp_posts}`;'.format(
-            temp_posts=sqlite_temp_table
-        )
-        con.execute(query)
+def save_new_posts(path, df):
+    columns = ['score', 'comms_num', 'upvote_ratio']
+    upsert(path, sqlite_temp_table, sqlite_table, df, columns)
 
 
 if __name__ == "__main__":
@@ -131,7 +82,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # Get config and reddit client
-    config = read_configs()
+    config = read_configs(path=args.path)
     reddit = get_reddit_client(config)
 
     # Get recent top submissions & save
@@ -139,4 +90,4 @@ if __name__ == "__main__":
         args.subreddit,
         args.number_posts,
         args.timespan)
-    save_new_posts(args.path)
+    save_new_posts(args.path, posts_df)
