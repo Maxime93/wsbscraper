@@ -1,9 +1,10 @@
-from os import path
+import logging
+
 import pandas as pd
 
 from utils.utils import (
     extract_tickers_from_text,
-    get_sqlite_engine,
+    define_log_file,
     read_configs,
     get_reddit_client,
     get_date
@@ -80,14 +81,31 @@ if __name__ == "__main__":
         choices=("DEBUG", "INFO", "WARNING", "ERROR"),
         default="INFO",
     )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--logfile", dest="logfile", action="store_true")
+    group.add_argument("--no-logfile", dest="logfile", action="store_false")
+    parser.set_defaults(logfile=False)
+
     args = parser.parse_args()
+
+    # Set up logger
+    logger = logging.getLogger(__name__)
+
+    # Save logs to file
+    if args.logfile:
+        define_log_file(args.path)
+
     # Get config and reddit client
+    logger.info("Reading configs..")
     config = read_configs(path=args.path)
+    logger.info("Getting reddit client..")
     reddit = get_reddit_client(config)
 
     # Get recent top submissions & save
+    logger.info("Getting reddit posts..")
     posts_df = get_reddit_posts(
         args.subreddit,
         args.number_posts,
         args.timespan)
+    logger.info("Saving reddit posts..")
     save_new_posts(args.path, posts_df)

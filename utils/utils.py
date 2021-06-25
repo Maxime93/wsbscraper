@@ -1,10 +1,35 @@
 import datetime
 import json
+import logging
+import os
 import re
+import sys
 import yaml
 
 import praw
 from sqlalchemy import create_engine
+
+
+def define_log_file(path):
+    # Create log directory
+    directory = "{path}/logs/{day}".format(
+        path=path,
+        day=datetime.datetime.now().strftime("%Y_%m_%d")
+    )
+    try:
+        os.makedirs(directory, exist_ok=True)
+    except OSError as error:
+        sys.exit("Directory '{}' can not be created. Error:\n{}".format(
+            directory, error
+        ))
+    # Save log in correct directory
+    logging.basicConfig(
+        filename="{path}/logs/{day}/{hour}.log".format(
+            path=path,
+            day=datetime.datetime.now().strftime("%Y_%m_%d"),
+            hour=datetime.datetime.now().strftime("%H")
+        )
+    )
 
 
 def get_date(created):

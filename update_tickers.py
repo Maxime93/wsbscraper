@@ -1,7 +1,9 @@
 import json
+import logging
 
 from utils.utils import (
-    get_sqlite_engine
+    get_sqlite_engine,
+    define_log_file
 )
 
 
@@ -60,7 +62,36 @@ if __name__ == "__main__":
         choices=("DEBUG", "INFO", "WARNING", "ERROR"),
         default="INFO",
     )
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--logfile", dest="logfile", action="store_true")
+    group.add_argument("--no-logfile", dest="logfile", action="store_false")
+    parser.set_defaults(logfile=False)
+
     args = parser.parse_args()
+
+    # Set up logger
+    logger = logging.getLogger(__name__)
+
+    # Save logs to file
+    if args.logfile:
+        define_log_file(args.path)
+
+    logging_map = {
+        'DEBUG': logging.DEBUG,
+        'INFO': logging.INFO,
+        'WARNING': logging.WARNING,
+        'ERROR': logging.ERROR
+    }
+
+    logger.setLevel(logging_map[args.log_level])
+    ch = logging.StreamHandler()
+    ch.setLevel('INFO')
+    logger.addHandler(ch)
+
+    logging.info("Getting posts from DB")
     post_tickers = get_daily_post_tickers(args.day, args.path)
+    logging.info("Getting comments from DB")
     comment_tickers = get_daily_comment_tickers(args.day, args.path)
+    logging.info("Saving new tickers in DB")
     save_tickers(post_tickers + comment_tickers, args.path)
