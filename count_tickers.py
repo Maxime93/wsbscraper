@@ -103,18 +103,6 @@ if __name__ == "__main__":
     if args.logfile:
         define_log_file(args.path)
 
-    logging_map = {
-        'DEBUG': logging.DEBUG,
-        'INFO': logging.INFO,
-        'WARNING': logging.WARNING,
-        'ERROR': logging.ERROR
-    }
-
-    logger.setLevel(logging_map[args.log_level])
-    ch = logging.StreamHandler()
-    ch.setLevel('INFO')
-    logger.addHandler(ch)
-
     logger("Getting tickers from posts")
     post_blobs = get_tickers('posts', args.day, args.path)
     logger("Getting tickers from comments")
