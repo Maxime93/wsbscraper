@@ -99,16 +99,12 @@ if __name__ == "__main__":
     # Set up logger
     logger = logging.getLogger(__name__)
 
-    # Save logs to file
-    if args.logfile:
-        define_log_file(args.path)
-
-    logger("Getting tickers from posts")
+    logger.info("Getting tickers from posts")
     post_blobs = get_tickers('posts', args.day, args.path)
-    logger("Getting tickers from comments")
+    logger.info("Getting tickers from comments")
     comment_blobs = get_tickers('comments', args.day, args.path)
 
-    logger("Counting tickers")
+    logger.info("Counting tickers")
     post_count, comment_count, all_count = count_tickers(post_blobs, comment_blobs)
-    logger("Save ticker counts")
+    logger.info("Save ticker counts")
     save(post_count, comment_count, all_count, args.day, args.path)
