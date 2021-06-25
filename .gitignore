@@ -144,4 +144,4 @@ cython_debug/
 **/configs
 
 # Data
-**/data
+**/data/reddit.db
