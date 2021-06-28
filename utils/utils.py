@@ -59,6 +59,7 @@ def get_reddit_client(config):
     )
     return reddit
 
+
 blacklist_words = [
       "YOLO", "TOS", "CEO", "CFO", "CTO", "DD", "BTFD", "WSB", "OK", "RH",
       "KYS", "FD", "TYS", "US", "USA", "IT", "ATH", "RIP", "BMW", "GDP",
