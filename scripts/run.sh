@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [[ ! $(pwd) == */wsbscraper ]]; then
-    echo "Run this script from the base hunterx directory with ./script/run.sh"
-    exit
-fi
-
 DEPLOY=$1
 
 if [ -n "$DEPLOY" ]; then
