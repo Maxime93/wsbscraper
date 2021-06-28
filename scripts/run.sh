@@ -6,7 +6,7 @@ if [ -n "$DEPLOY" ]; then
     echo "Running on $DEPLOY"
     if [ $DEPLOY == "raspberry" ]; then
         source /home/pi/wsbscraper/wsbscraper/bin/activate
-        python /home/pi/wsbscraper/runner.py -p /home/pi/wsbscraper/ -n 5
+        python /home/pi/wsbscraper/runner.py -p /home/pi/wsbscraper/ -n 5 --logfile
     # else
         # Build the docker container before running
         # docker build -t wsbscraper .
