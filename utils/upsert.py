@@ -1,10 +1,10 @@
 from utils.utils import (
-    get_sqlite_engine
+    SQLiteExecutor
 )
 
-
-def upsert(path, sqlite_temp_table, sqlite_table, df, columns):
-    engine = get_sqlite_engine(path=path)
+def upsert(env, sqlite_temp_table, sqlite_table, df, columns):
+    _sqlite_executor = SQLiteExecutor(env)
+    engine = _sqlite_executor.engine
     with engine.begin() as con:
         # DELETE temp table
         query = 'DROP TABLE IF EXISTS `{temp}`;'.format(

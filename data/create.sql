@@ -4,5 +4,5 @@ CREATE TABLE "posts" ("id" text NOT NULL,"title" text NOT NULL,"score" bigint NO
 
 CREATE TABLE "tickers" ("ticker" text, PRIMARY KEY (ticker));
 
-CREATE TABLE "tickers_timeseries" ("id" text NOT NULL DEFAULT NULL,"day" datetime NOT NULL,"source" text NOT NULL,"blob" blob, PRIMARY KEY (id));
+CREATE TABLE "tickers_timeseries" ("id" text NOT NULL DEFAULT NULL,"day" datetime NOT NULL,"source" text NOT NULL,"subreddit" text NOT NULL,"blob" blob, PRIMARY KEY (id));
 

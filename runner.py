@@ -1,10 +1,59 @@
 import argparse
 import datetime
 import logging
-import subprocess
-import time
 
-from utils.utils import define_log_file
+from utils.utils import (
+    logging_map,
+    create_log_dir
+)
+from save_reddit_posts import RedditPostSaver
+from save_tickers import TickerSaver
+from save_ticker_timeseries import TickerTimeSeriesSaver
+
+class RedditScraperRunner(object):
+    """Class for running Reddit Scrapers"""
+
+    def __init__(self, number_posts, timespan, subreddit, env, log_level="INFO"):
+        self.number_posts = number_posts
+        self.timespan = timespan
+        self.subreddit = subreddit
+        self.env = env
+        self.log_level = log_level
+        self.day = datetime.datetime.now().strftime("%Y-%m-%d")
+
+    def run(self):
+
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging_map[self.log_level])
+        log_directory, log_file_name = create_log_dir('RedditScrapper')
+        file = logging.FileHandler(log_directory + "/" + log_file_name)
+        file.setLevel(logging_map[self.log_level])
+        fileformat = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
+        file.setFormatter(fileformat)
+
+        self.logger.addHandler(file)
+
+
+        # logging.basicConfig(
+        #     filename=(log_directory + "/" + log_file_name),
+        #     level=logging_map[args.log_level],
+        #     format="%(asctime)s:%(levelname)s:%(message)s"
+        # )
+        self.logger.info("Started run")
+
+        self.logger.info("Starting reddit scrapper:")
+        self.logger.info("--> Number of posts: {}".format(self.number_posts))
+        self.logger.info("--> Subreddit: {}".format(self.subreddit))
+
+        _save_posts = RedditPostSaver(self.number_posts, self.timespan, self.subreddit, self.env, self.logger)
+        _save_posts.run()
+
+        _save_tickers = TickerSaver(self.env)
+        _save_tickers.run()
+
+        _save_ticker_timeseries = TickerTimeSeriesSaver(self.subreddit, 'posts', self.env)
+        _save_ticker_timeseries.run()
+
 
 if __name__ == "__main__":
     # Setup argument parser
@@ -13,90 +62,20 @@ if __name__ == "__main__":
                         help='Set the level for logging',
                         choices=('DEBUG', 'INFO', 'WARNING', 'ERROR'),
                         default='DEBUG')
-    parser.add_argument("-p", "--path",
-                        help="Path to your DB file",
-                        default="", type=str)
+    parser.add_argument("-s", "--subreddit",
+                        help="eg. wallstreetbets",
+                        type=str, required=True)
     parser.add_argument("-n", "--number-posts",
                         help="Number of posts to scrape",
                         type=int, default=5)
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--logfile", dest="logfile", action="store_true")
-    group.add_argument("--no-logfile", dest="logfile", action="store_false")
-    parser.set_defaults(logfile=False)
+    parser.add_argument("-t", "--timespan",
+                        help="Over how much time",
+                        type=str, default='day')
+    parser.add_argument("-e", "--env",
+                        help="Environement the code is running on",
+                        type=str, default='local')
 
     args = parser.parse_args()
 
-    # Set up logger
-    logger = logging.getLogger(__name__)
-
-    # Save logs to file
-    if args.logfile:
-        define_log_file(args.path)
-
-    logging_map = {
-        'DEBUG': logging.DEBUG,
-        'INFO': logging.INFO,
-        'WARNING': logging.WARNING,
-        'ERROR': logging.ERROR
-    }
-
-    logger.setLevel(logging_map[args.log_level])
-    ch = logging.StreamHandler()
-    ch.setLevel('INFO')
-    logger.addHandler(ch)
-    logger.info('Logger set up')
-
-    day = datetime.datetime.now().strftime("%Y-%m-%d")
-
-    # ##############################
-    logger.info("Save posts..")
-    command = [
-        "python",
-        "{}save_posts.py".format(args.path),
-        "-n", str(args.number_posts),
-        "-p", args.path
-    ]
-    if args.logfile:
-        command.append("--logfile")
-    subprocess.call(command)
-    logger.info("Done.\n\n")
-
-    # ##############################
-    time.sleep(2)
-    # ##############################
-
-    # Skipping saving comments, content sucks
-    # logger.info("Save comments..")
-    # subprocess.call([
-    #     "python",
-    #     "save_comments.py",
-    #     "-d", day, "-p", args.path
-    # ])
-    # logger.info("Done.\n\n")
-
-    # ##############################
-    # time.sleep(2)
-    # ##############################
-
-    logger.info("Update tickers..")
-    subprocess.call([
-        "python",
-        "{}update_tickers.py".format(args.path),
-        "-d", day,
-        "-p", args.path
-    ])
-    logger.info("Done.\n\n")
-
-    # ##############################
-    time.sleep(2)
-    # ##############################
-
-    logger.info("Count tickers..")
-    subprocess.call([
-        "python",
-        "{}count_tickers.py".format(args.path),
-        "-d", day,
-        "-p", args.path
-    ])
-    logger.info("Done.")
+    rsr = RedditScraperRunner(args.number_posts, args.timespan, args.subreddit, args.env)
+    rsr.run()

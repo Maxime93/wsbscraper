@@ -91,7 +91,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     # Get config and reddit client
-    config = read_configs(path=args.path)
+    config = read_configs(path=args.path, object="reddit")
     reddit = get_reddit_client(config)
 
     # Get reddit posts for a day
