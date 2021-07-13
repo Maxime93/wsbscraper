@@ -38,3 +38,4 @@ urllib3==1.26.3
 wcwidth==0.2.5
 websocket-client==1.1.0
 yfinance==0.1.55
+yfinance-ez==0.3.0

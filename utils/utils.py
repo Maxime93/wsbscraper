@@ -164,9 +164,11 @@ class Ticker(ConfigReader, SQLiteExecutor):
         return data
 
 
-def create_log_dir(name):
+def create_log_dir(name, env):
     date = datetime.datetime.now()
-    log_directory = date.strftime('/Users/maximerichard/dev/wsbscraper/logs/%Y_%m_%d')
+    log_directory = date.strftime('{}/logs/%Y_%m_%d'.format(
+        paths[env]
+    ))
     try:
         os.makedirs(log_directory)
     except OSError as exception:

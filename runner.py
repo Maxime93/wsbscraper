@@ -25,7 +25,7 @@ class RedditScraperRunner(object):
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_map[self.log_level])
-        log_directory, log_file_name = create_log_dir('RedditScrapper')
+        log_directory, log_file_name = create_log_dir('RedditScrapper', self.env)
 
         file = logging.FileHandler(log_directory + "/" + log_file_name)
         file.setLevel(logging_map[self.log_level])
