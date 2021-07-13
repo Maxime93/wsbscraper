@@ -20,7 +20,8 @@ logging_map = {
         'ERROR': logging.ERROR
     }
 paths = {
-    "local": "/Users/maximerichard/dev/wsbscraper"
+    "local": "/Users/maximerichard/dev/wsbscraper",
+    "raspberry": "/home/pi/wsbscraper"
 }
 blacklist_words = [
       "YOLO", "TOS", "CEO", "CFO", "CTO", "DD", "BTFD", "WSB", "OK", "RH",

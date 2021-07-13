@@ -26,19 +26,13 @@ class RedditScraperRunner(object):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging_map[self.log_level])
         log_directory, log_file_name = create_log_dir('RedditScrapper')
+
         file = logging.FileHandler(log_directory + "/" + log_file_name)
         file.setLevel(logging_map[self.log_level])
         fileformat = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
         file.setFormatter(fileformat)
 
         self.logger.addHandler(file)
-
-
-        # logging.basicConfig(
-        #     filename=(log_directory + "/" + log_file_name),
-        #     level=logging_map[args.log_level],
-        #     format="%(asctime)s:%(levelname)s:%(message)s"
-        # )
         self.logger.info("Started run")
 
         self.logger.info("Starting reddit scrapper:")
