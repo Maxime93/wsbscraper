@@ -9,8 +9,7 @@ from utils.utils import (
     ConfigReader,
     SQLiteExecutor,
     TickerExtractor,
-    get_date_from_timestamp,
-    logging_map
+    get_date_from_timestamp
 )
 from utils.upsert import upsert
 
@@ -38,34 +37,34 @@ class RedditPostSaver(ConfigReader, SQLiteExecutor):
     """Class for saving Redit Posts to SQLite"""
 
     def __init__(self, number_posts, timespan, subreddit, env, logger):
-        super().__init__(env)
+        super().__init__(env, logger)
+
         self.logger = logger
-        # self.logger.getLogger(__name__)
         self.read_configs()
-        self.logger.info("Initiating RedditPostSaver.")
+        self.logger.info("[RedditPostSaver] Initiating RedditPostSaver.")
         self.timespan = timespan
         self.number_posts = number_posts
         self.subreddit = subreddit
         self.env = env
 
-        self.logger.info("Starting RedditPostSaver.")
+        self.logger.info("[RedditPostSaver] Starting RedditPostSaver.")
 
     def run(self):
         # Get config and reddit client
-        self.logger.info("Getting reddit client..")
+        self.logger.info("[RedditPostSaver] Getting reddit client..")
         self.get_reddit_client()
 
-        self.logger.info("Getting pre-existing tickers..")
+        self.logger.info("[RedditPostSaver] Getting pre-existing tickers..")
         self.get_tickers()
-        self.logger.info(self.pre_existing_tickers)
+        self.logger.info("[RedditPostSaver] ".format(self.pre_existing_tickers))
 
         # Get recent top submissions & save
-        self.logger.info("Getting reddit posts..")
+        self.logger.info("[RedditPostSaver] Getting reddit posts..")
         self.get_reddit_posts()
 
 
-        self.logger.info("Collected {} posts".format(len(self.posts)))
-        self.logger.info("Saving reddit posts..")
+        self.logger.info("[RedditPostSaver] Collected {} posts".format(len(self.posts)))
+        self.logger.info("[RedditPostSaver] Saving reddit posts..")
         self.save_new_posts()
 
 
@@ -113,11 +112,14 @@ class RedditPostSaver(ConfigReader, SQLiteExecutor):
         posts_df = pd.DataFrame(posts_dict)
         _timestamp = posts_df["created"].apply(get_date_from_timestamp)
         posts_df = posts_df.assign(timestamp=_timestamp)
-        _ticker_extractor = TickerExtractor(self.env)
-        posts_df['tickers'] = posts_df.apply(lambda x: _ticker_extractor.extract_tickers_from_text([x.title, x.body]), axis=1)
+        _ticker_extractor = TickerExtractor(self.env, self.logger)
+        posts_df['tickers'] = posts_df.apply(
+            lambda x: _ticker_extractor.extract_tickers_from_text(
+                [x.title, x.body]),axis=1)
 
         return posts_df[COLUMNS]
 
     def save_new_posts(self):
         columns = ['score', 'comms_num', 'upvote_ratio']
-        upsert(self.env, sqlite_temp_table, sqlite_table, self.posts, columns)
+        upsert(self.env, sqlite_temp_table, sqlite_table,
+            self.posts, columns, self.logger)

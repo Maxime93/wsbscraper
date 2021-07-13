@@ -16,10 +16,10 @@ sqlite_temp_table = "temp_tickers_timeseries"
 class TickerTimeSeriesSaver(SQLiteExecutor):
     """Class saving daily ticker counts from Redit Posts to SQLite"""
 
-    def __init__(self, subreddit, source, env):
-        super().__init__(env)
-        self.logger = logging.getLogger(__name__)
-        self.logger.info("Initiating TickerTimeSeriesSaver.")
+    def __init__(self, subreddit, source, env, logger):
+        super().__init__(env, logger)
+        self.logger = logger
+        self.logger.info("[TickerTimeSeriesSaver] Initiating TickerTimeSeriesSaver.")
         self.subreddit = subreddit
         self.env = env
         self.source = source
@@ -30,13 +30,13 @@ class TickerTimeSeriesSaver(SQLiteExecutor):
         self.final_count_dict = None
 
     def run(self):
-        self.logger.info("Getting tickers from posts")
+        self.logger.info("[TickerTimeSeriesSaver] Getting tickers from posts")
         self.get_tickers()
 
-        self.logger.info("Count tickers from posts")
+        self.logger.info("[TickerTimeSeriesSaver] Count tickers from posts")
         self.count_tickers()
 
-        self.logger.info(self.final_count_dict)
+        self.logger.info("[TickerTimeSeriesSaver] {}".format(self.final_count_dict))
 
         self.save()
 
@@ -97,4 +97,4 @@ class TickerTimeSeriesSaver(SQLiteExecutor):
         ]
         df = pd.DataFrame.from_records(data)
         columns = ['blob']
-        upsert(self.env, sqlite_temp_table, sqlite_table, df, columns)
+        upsert(self.env, sqlite_temp_table, sqlite_table, df, columns, self.logger)

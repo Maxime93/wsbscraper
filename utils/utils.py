@@ -42,9 +42,9 @@ blacklist_words = [
 class ConfigReader(object):
     """Class for reading configs"""
 
-    def __init__(self, env):
+    def __init__(self, env, logger):
         self.env = env
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
         self.configs = None
 
     def read_configs(self):
@@ -67,14 +67,14 @@ class ConfigReader(object):
 
 class SQLiteExecutor(object):
     """Class for executing SQL statements"""
-    def __init__(self, env):
+    def __init__(self, env, logger):
         self.env = env
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
 
     @property
     def engine(self, echo=False):
         path_to_db = "{}/data/reddit.db".format(paths[self.env])
-        self.logger.info("Path to db: {}".format(path_to_db))
+        self.logger.info("[SQLiteExecutor] Path to db: {}".format(path_to_db))
         sqlite_loc = 'sqlite:///{path}'.format(path=path_to_db)
         engine = create_engine(sqlite_loc, echo=echo)
         return engine
@@ -90,8 +90,9 @@ class SQLiteExecutor(object):
 
 class TickerExtractor(object):
     """Class for extracting tickers from text."""
-    def __init__(self, env):
+    def __init__(self, env, logger):
         self.env = env
+        self.logger = logger
         self.tickers = {}
         self.logger = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class TickerExtractor(object):
             word_list = re.sub("[^\w]", " ",  text).split()
             for word in word_list:
                 if word.isupper() and len(word) != 1 and (word.upper() not in blacklist_words) and len(word) <= 5 and word.isalpha():
-                    _ticker = Ticker(word, self.env)
+                    _ticker = Ticker(word, self.env, self.logger)
                     if word not in self.tickers:
                         _ticker.verify()
                         if _ticker.is_ticker:
@@ -112,15 +113,15 @@ class TickerExtractor(object):
 
 class Ticker(ConfigReader, SQLiteExecutor):
     """Class for managing Tickers"""
-    def __init__(self, ticker, env):
-        super().__init__(env)
-        self.logger = logging.getLogger(__name__)
+    def __init__(self, ticker, env, logger):
+        super().__init__(env, logger)
+        self.logger = logger
+
         self.read_configs()
         self.ticker = ticker
         self.is_ticker = False
         self.count = 0
         self.url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={}&interval=5min&apikey={}"
-        self.logger = logging.getLogger(__name__)
 
     def increment_count(self):
         self.count+=1
@@ -133,16 +134,16 @@ class Ticker(ConfigReader, SQLiteExecutor):
 
     def verify(self):
         """Verify that the ticker is actually a ticker"""
-        self.logger.info("Verifying: {}".format(self.ticker))
+        self.logger.info("[Ticker] Verifying: {}".format(self.ticker))
         if self.ticker in self.all_tickers:
             self.is_ticker = True
         else:
             data = self.get_info_data()
             if 'shortName' not in data.keys():
-                self.logger.info("{} not a ticker".format(self.ticker))
+                self.logger.info("[Ticker] {} not a ticker".format(self.ticker))
                 self.is_ticker = False
             else:
-                self.logger.info("{} is a ticker".format(self.ticker))
+                self.logger.info("[Ticker] {} is a ticker".format(self.ticker))
                 self.is_ticker = True
 
     def get_info_data(self):
@@ -157,8 +158,8 @@ class Ticker(ConfigReader, SQLiteExecutor):
             r = requests.get(endpoint)
             data = r.json()
         except Exception as e:
-            self.logger.error(e)
-            self.logger.error("Error reaching alphavantage api")
+            self.logger.error("[Ticker] error: {}".format(e))
+            self.logger.error("[Ticker] Error reaching alphavantage api")
             sys.exit()
         self.logger.info(data)
         return data

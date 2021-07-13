@@ -2,8 +2,8 @@ from utils.utils import (
     SQLiteExecutor
 )
 
-def upsert(env, sqlite_temp_table, sqlite_table, df, columns):
-    _sqlite_executor = SQLiteExecutor(env)
+def upsert(env, sqlite_temp_table, sqlite_table, df, columns, logger):
+    _sqlite_executor = SQLiteExecutor(env, logger)
     engine = _sqlite_executor.engine
     with engine.begin() as con:
         # DELETE temp table
