@@ -14,20 +14,20 @@ from utils.utils import (
 
 class DiscordNotifier(ConfigReader, SQLiteExecutor):
     """Class for managing Tickers"""
-    def __init__(self, day, subreddit, env):
-        super().__init__(env)
-        self.logger = logging.getLogger(__name__)
+    def __init__(self, day, subreddit, env, logger):
+        super().__init__(env, logger)
         self.read_configs()
         self.day = day
         self.subreddit = subreddit
         self.env = env
+        self.logger = logger
 
     def run(self):
-        self.logger.info("Getting latest tickers from DB")
+        self.logger.info("[DiscordNotifier] Getting latest tickers from DB")
         blob = self.get_day_tickers()
-        self.logger.info(blob)
+        self.logger.info("[DiscordNotifier] {}".format(blob))
 
-        self.logger.info("Posting to discord")
+        self.logger.info("[DiscordNotifier] Posting to discord")
         self.post_tickers()
 
     def get_day_tickers(self):
@@ -39,7 +39,7 @@ class DiscordNotifier(ConfigReader, SQLiteExecutor):
                     day=self.day, subreddit=self.subreddit
                     )
                 )
-        self.logger.info(query)
+        self.logger.info("[DiscordNotifier] {}".format(query))
         self.blob = self.execute_query(query)
 
     def post_tickers(self):
@@ -57,10 +57,10 @@ class DiscordNotifier(ConfigReader, SQLiteExecutor):
                 data=payload,
                 headers=self.discord_config['headers']
             )
-            self.logger.info(r.text)
+            self.logger.info("[DiscordNotifier] {}".format(r.text))
         except Exception as e:
-            self.logger.error("Failed posting to Discord")
-            self.logger.error(e)
+            self.logger.error("[DiscordNotifier] Failed posting to Discord")
+            self.logger.error("[DiscordNotifier] {}".format(e))
             sys.exit()
 
 
@@ -80,14 +80,22 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    log_directory, log_file_name = create_log_dir('DiscordNotifier')
-    logging.basicConfig(
-        filename=(log_directory + "/" + log_file_name),
-        level=logging_map[args.log_level]
-    )
     logger = logging.getLogger(__name__)
-    logger.info("Started run")
+    logger.setLevel(logging_map[args.log_level])
 
-    day = datetime.datetime.now().srtptime("%Y-%m-%d")
-    _discord_notifier = DiscordNotifier(day, args.subreddit, args.env)
+    log_directory, log_file_name = create_log_dir('DiscordNotifier', args.env)
+    log_format = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
+
+    file_handler = logging.FileHandler(log_directory + "/" + log_file_name)
+    file_handler.setLevel(logging_map[args.log_level])
+    file_handler.setFormatter(log_format)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(log_format)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+
+    day = datetime.datetime.now().strftime("%Y-%m-%d")
+    _discord_notifier = DiscordNotifier(day, args.subreddit, args.env, logger)
     _discord_notifier.run()
