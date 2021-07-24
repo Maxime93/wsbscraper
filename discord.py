@@ -5,6 +5,10 @@ import logging
 import requests
 import sys
 
+import pandas as pd
+
+from discord_webhook import DiscordWebhook
+
 from utils.utils import (
     logging_map,
     create_log_dir,
@@ -40,28 +44,27 @@ class DiscordNotifier(ConfigReader, SQLiteExecutor):
                     )
                 )
         self.logger.info("[DiscordNotifier] {}".format(query))
-        self.blob = self.execute_query(query)
+        blob = json.loads(self.execute_query(query)[0][0])
+        self.counts = pd.DataFrame(
+            list(blob.items()),
+            columns=['Ticker','Counts']
+        ).sort_values(
+            'Counts', axis=0, ascending=False
+        ).set_index('Ticker')
+        print(self.counts)
 
     def post_tickers(self):
-        payload = {
-        'content':"Daily ticker count {}: {}\n{}".format(
-                self.day, self.subreddit, json.loads(self.blob[0][0])
-            )
-        }
-        self.post_discord(payload)
-
-    def post_discord(self, payload):
-        try:
-            r = requests.post(
-                self.discord_config['endpoint'],
-                data=payload,
-                headers=self.discord_config['headers']
-            )
-            self.logger.info("[DiscordNotifier] {}".format(r.text))
-        except Exception as e:
-            self.logger.error("[DiscordNotifier] Failed posting to Discord")
-            self.logger.error("[DiscordNotifier] {}".format(e))
-            sys.exit()
+        self.logger.info("[DiscordNotifier] {}".format(
+            self.counts.to_string()))
+        message = "Daily ticker count {}: {}\n{}".format(
+            self.day, self.subreddit, self.counts.to_string()
+        )
+        webhook = DiscordWebhook(
+            url=self.discord_config['url'],
+            username="WSBAlert",
+            content=message
+        )
+        webhook.execute()
 
 
 if __name__ == "__main__":

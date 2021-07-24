@@ -5,6 +5,8 @@ chardet==4.0.0
 click==7.1.2
 dask==2021.6.2
 decorator==4.4.2
+discord-webhook==0.14.0
+discord.py==1.7.3
 greenlet==1.1.0
 html2text==2020.1.16
 idna==2.10
