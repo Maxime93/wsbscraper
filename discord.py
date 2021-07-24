@@ -2,8 +2,6 @@ import argparse
 import datetime
 import json
 import logging
-import requests
-import sys
 
 import pandas as pd
 
